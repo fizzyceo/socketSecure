@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   SparklesIcon,
   HashtagIcon,
@@ -12,14 +12,51 @@ import {
   PaperAirplaneIcon,
 } from "@heroicons/react/24/solid";
 import ChatBox from "./ChatBox";
-
-const ChatSide = () => {
+import { useAuth } from "../hooks/useAuth";
+import axios from "axios";
+const ChatSide = ({ name, type, selected }) => {
   const [infoShow, setInfoShow] = useState(false);
-
   const showInfo = () => {
     setInfoShow((showing) => !showing);
   };
+  const [messages, setMessages] = useState([]);
+  const user = useAuth((state) => state.user);
+  const [content, setContent] = useState("");
 
+  useEffect(() => {
+    //fetch messages
+
+    const fetchMessages = async () => {
+      //fetch chat table with type chat
+      const response = await axios.post("http://localhost:5000/Message/get", {
+        chatId: selected,
+      });
+      console.log(response.data);
+      setMessages(response.data);
+    };
+    fetchMessages();
+  }, [selected]);
+
+  const createMessage = async () => {
+    if (content && user) {
+      const now = new Date();
+      const dateFormatted = now.toISOString().split("T")[0]; // yyyy-mm-dd
+      const timeFormatted = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }); // hh:mm
+
+      console.log(dateFormatted, timeFormatted, selected, content, user.id);
+      const response = await axios.post("http://localhost:5000/Message/Add", {
+        chatId: selected,
+        content: content,
+        sender: user.id,
+        date: dateFormatted,
+        heure: timeFormatted,
+      });
+      console.log(response.data);
+    }
+  };
   return (
     <div className="h-full transition-all  text-white bg-yellow-300 w-full mx-auto flex flex-row ">
       <div
@@ -32,8 +69,8 @@ const ChatSide = () => {
             <span className="flex flex-row items-center gap-3">
               <UserCircleIcon className="w-20" />
               <span>
-                <p>@uername</p>
-                <p className="italic text-sm font-bold">status</p>
+                <p className="text-xl font-bold">{name}</p>
+                <p className=" text-sm font-sans">{type}</p>
               </span>
             </span>
           </div>
@@ -42,7 +79,7 @@ const ChatSide = () => {
           </button>
         </div>
         <div className="h-[75%] overflow-y-auto bg-[#36393e]">
-          <ChatBox />
+          <ChatBox messages={messages} />
         </div>
         <div className="buttons flex flex-row items-center justify-center gap-5      px-5 py-2 h-1/6 bg-[#282b30]">
           <div className="flex flex-row p-1 rounded-full  gap-1  ring-2 ring-[#ffff] focus:ring-blue-500 w-[85%] items-center">
@@ -51,11 +88,13 @@ const ChatSide = () => {
             </button>
             <input
               type="text"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               placeholder="Enter your message..."
               className="w-[90%] text-lg outline-none p-2 bg-[#282b30]"
             />
           </div>
-          <button>
+          <button onClick={createMessage}>
             <PaperAirplaneIcon className="bg-gradient-to-l from-[#3e59b9] to-[#112f9c] rounded-full -rotate-45 p-2 w-12" />
           </button>
         </div>

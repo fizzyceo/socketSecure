@@ -1,6 +1,8 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 
-const CreatePopup = ({ isvisible, onClose }) => {
+const CreatePopup = ({ isvisible, onClose, fetchChats, fetchChannels }) => {
   const handleClose = (e) => {
     if (e.target?.id == "wrapper") {
       onClose();
@@ -8,10 +10,42 @@ const CreatePopup = ({ isvisible, onClose }) => {
   };
   const [selectedOption, setSelectedOption] = useState(0);
   const [addedMembers, setAddedMembers] = useState([]);
-
+  const [DestEmail, setToEmail] = useState("");
+  const [emailInstance, setEmailInstance] = useState("");
+  const [EmailList, setEmailList] = useState([]);
+  const [Title, setTitle] = useState("");
   useEffect(() => {
     setAddedMembers(["@ilyes", "@amine", "@rayane"]);
   }, []);
+
+  const user = useAuth((state) => state.user);
+  const createChat = async () => {
+    if (Title && DestEmail && user.id) {
+      const res = await axios.post(
+        "http://localhost:5000/Invitation/Sentinvi",
+        { Title, DestEmail, From: user.id }
+      );
+      console.log(res.data);
+      if (res.status === 200) {
+        onClose();
+        fetchChats();
+      }
+    }
+  };
+
+  const createChannel = async () => {
+    if (EmailList.length > 0 && Title && user.id) {
+      const res = await axios.post(
+        "http://localhost:5000/Invitation/Sentinvigroup",
+        { Title, members: EmailList, From: user.id }
+      );
+      console.log(res.data);
+      if (res.status === 200) {
+        onClose();
+        fetchChannels();
+      }
+    }
+  };
   if (!isvisible) return null;
   return (
     <div
@@ -60,6 +94,8 @@ const CreatePopup = ({ isvisible, onClose }) => {
                   </label>
                   <input
                     type="text"
+                    value={Title}
+                    onChange={(e) => setTitle(e.target.value)}
                     placeholder="title..."
                     className="p-2  flex-grow rounded-full px-4 outline-none"
                   />
@@ -70,6 +106,8 @@ const CreatePopup = ({ isvisible, onClose }) => {
                   </label>
                   <input
                     type="text"
+                    value={DestEmail}
+                    onChange={(e) => setToEmail(e.target.value)}
                     placeholder="@username..."
                     className="p-2  flex-grow rounded-full px-4 outline-none"
                   />
@@ -77,7 +115,10 @@ const CreatePopup = ({ isvisible, onClose }) => {
                     Check
                   </button>
                 </div>
-                <button className="p-3 text-xl text-white rounded-full  bg-gradient-to-l from-[#3e59b9]  to-[#112f9c] ">
+                <button
+                  onClick={createChat}
+                  className="p-3 text-xl text-white rounded-full  bg-gradient-to-l from-[#3e59b9]  to-[#112f9c] "
+                >
                   Create
                 </button>
               </div>
@@ -90,6 +131,8 @@ const CreatePopup = ({ isvisible, onClose }) => {
                   <input
                     type="text"
                     placeholder="title..."
+                    value={Title}
+                    onChange={(e) => setTitle(e.target.value)}
                     className="p-2  flex-grow rounded-full px-4 outline-none"
                   />
                 </div>
@@ -100,17 +143,25 @@ const CreatePopup = ({ isvisible, onClose }) => {
                   <input
                     type="text"
                     placeholder="@username..."
+                    value={emailInstance}
+                    onChange={(e) => setEmailInstance(e.target.value)}
                     className="p-2  flex-grow rounded-full px-4 outline-none"
                   />
-                  <button className="p-3 rounded-r-lg  bg-gradient-to-l from-[#3e59b9]  to-[#112f9c]  text-white ">
+                  <button
+                    onClick={() => {
+                      setEmailList([...EmailList, emailInstance]);
+                      setEmailInstance("");
+                    }}
+                    className="p-3 rounded-r-lg  bg-gradient-to-l from-[#3e59b9]  to-[#112f9c]  text-white "
+                  >
                     Add
                   </button>
                 </div>
                 <span className="3 text-xl text-white">
                   Members:{" "}
-                  {addedMembers.length > 0 ? (
+                  {EmailList.length > 0 ? (
                     <ul>
-                      {addedMembers.map((member, index) => (
+                      {EmailList.map((member, index) => (
                         <li key={index}>{member}</li>
                       ))}
                     </ul>
@@ -119,7 +170,10 @@ const CreatePopup = ({ isvisible, onClose }) => {
                   )}
                 </span>
 
-                <button className="p-3 text-xl text-white rounded-full  bg-gradient-to-l from-[#3e59b9]  to-[#112f9c] ">
+                <button
+                  onClick={createChannel}
+                  className="p-3 text-xl text-white rounded-full  bg-gradient-to-l from-[#3e59b9]  to-[#112f9c] "
+                >
                   Create
                 </button>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   SparklesIcon,
   HashtagIcon,
@@ -13,16 +13,39 @@ import CreatePopup from "../components/CreatePopup";
 import InivitationPopup from "../components/InvitationPopup";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import axios from "axios";
 
 const Chat = () => {
   const [showAddChat, setShowAddChat] = useState(false);
   const [showInvites, setShowInvites] = useState(false);
   const [channelList, setChannelList] = useState([]);
   const [chatList, setChatList] = useState([]);
-
+  const [chatSelected, setChatSelected] = useState(null);
   const logout = useAuth((state) => state.logout);
+  const user = useAuth((state) => state.user);
   let navigate = useNavigate();
-
+  const fetchChannels = async () => {
+    //fetch chat table with type chat
+    const response = await axios.post("http://localhost:5000/chat/get", {
+      id: user.id,
+      type: "channel",
+    });
+    console.log(response.data);
+    setChannelList(response.data);
+  };
+  const fetchChats = async () => {
+    //fetch channel table with type channel
+    const response = await axios.post("http://localhost:5000/chat/get", {
+      id: user.id,
+      type: "chat",
+    });
+    setChatList(response.data);
+    console.log(response.data);
+  };
+  useEffect(() => {
+    fetchChats();
+    fetchChannels();
+  }, []);
   return (
     <div className="h-screen w-screen  overflow-y-hidden flex flex-row flex-wrap ">
       <div className="absolute h-screen w-screen top-0 right-0 -z-10 bg-[#1e2124]"></div>
@@ -53,9 +76,13 @@ const Chat = () => {
             {channelList.length > 0 ? (
               <ul className="w-[90%] mx-auto flex flex-col gap-2">
                 {channelList.map((channel) => (
-                  <li className="flex flex-row items-center p-3 gap-2 rounded-full  hover:bg-[#33373a]">
+                  <li
+                    key={channel.id}
+                    onClick={() => setChatSelected(channel)}
+                    className="flex flex-row items-center p-3 gap-2 rounded-full  hover:bg-[#33373a]"
+                  >
                     <HashtagIcon className="w-5  " />
-                    <p>{channel}</p>
+                    <p>{channel.Titre}</p>
                   </li>
                 ))}
               </ul>
@@ -77,9 +104,13 @@ const Chat = () => {
             {chatList.length > 0 ? (
               <ul className="w-[90%] mx-auto flex flex-col gap-2">
                 {chatList.map((chat) => (
-                  <li className="flex flex-row items-center p-3 gap-2 rounded-full  hover:bg-[#33373a]">
+                  <li
+                    key={chat.id}
+                    onClick={() => setChatSelected(chat)}
+                    className="flex flex-row items-center p-3 gap-2 rounded-full  hover:bg-[#33373a]"
+                  >
                     <ChatBubbleOvalLeftEllipsisIcon className="w-5  " />
-                    <p>{chat}</p>
+                    <p>{chat.Titre}</p>
                   </li>
                 ))}
               </ul>
@@ -123,13 +154,27 @@ const Chat = () => {
       </div>
 
       <div className="w-full h-full md:w-[70%] ">
-        <ChatSide />
+        {chatSelected ? (
+          <ChatSide
+            name={chatSelected.Titre}
+            type={chatSelected.type}
+            selected={chatSelected.id}
+          />
+        ) : (
+          <div className="flex items-center h-full w-full bg-slate-900 font-bold text-white italic font-sans text-xl">
+            <p className=" font-bold text-white italic mx-auto font-sans text-xl ">
+              no chat Selected Yet!
+            </p>
+          </div>
+        )}
       </div>
       <InivitationPopup
         onClose={() => setShowInvites(false)}
         isvisible={showInvites}
       />
       <CreatePopup
+        fetchChannels={fetchChannels}
+        fetchChats={fetchChats}
         onClose={() => setShowAddChat(false)}
         isvisible={showAddChat}
       />

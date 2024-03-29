@@ -40,15 +40,15 @@ const MessageContainer = ({ username, message, date, side }) => {
             } px-4 py-2`}
           >
             <span className={`text-sm font-medium text-white`}>{message}</span>
-            <span
+            {/* <span
               className={`absolute top-0 ${
                 side === 1
                   ? "left-0 -translate-x-5 bg-muted-1"
                   : "translate-x-5 right-0 bg-[#1e2124]"
               } flex h-8 w-8 -translate-y-3  transform items-center justify-center rounded-full  p-2 text-xs`}
             >
-              👍 {/**right-0 */}
-            </span>
+              👍
+            </span> */}
           </div>
           <h1
             className={` ${side === 1 ? "text-right" : "text-left "}  text-xs`}

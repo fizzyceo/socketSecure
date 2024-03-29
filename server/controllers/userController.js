@@ -30,10 +30,9 @@ const supabaseKey =
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function createUser(req, res) {
-  const { email, password, nom, prenom } = req.body; // Assurez-vous d'avoir bodyParser configuré pour traiter les requêtes POST
-
+  const { email, password, firstName, lastName } = req.body; // Assurez-vous d'avoir bodyParser configuré pour traiter les requêtes POST
   try {
-    const { user, error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
     });
@@ -42,24 +41,30 @@ async function createUser(req, res) {
       return res.status(400).json({ message: error.message });
     }
 
-    // Insertion dans la table User
-    const { data: user1, error: error1 } = await supabase
-      .from("User")
-      .insert({
-        Email: email,
-        Nom: nom,
-        Prenom: prenom,
-      })
-      .single();
+    console.log(data);
+    if (data.user.id) {
+      // Insertion dans la table User
+      const { data: user1, error: error1 } = await supabase
+        .from("User")
+        .insert({
+          Email: email,
+          Nom: lastName,
+          Prenom: firstName,
+          user_id: data.user.id, // Access user.id only if user exists
+        })
+        .single();
 
-    if (error1) {
-      return res.status(400).json({ message: error1.message });
+      if (error1) {
+        return res.status(500).json({ message: "Error creating user." });
+      }
+
+      // User created successfully
+      return res.status(200).json({ message: "User created successfully." });
+    } else {
+      return res.status(500).json({ message: "User object is undefined." });
     }
-
-    return res.status(201).json({ message: "User created successfully" });
   } catch (error) {
-    console.error("Error creating user:", error.message);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error." });
   }
 }
 

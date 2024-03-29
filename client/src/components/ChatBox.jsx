@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   SparklesIcon,
   HashtagIcon,
@@ -12,7 +12,10 @@ import {
   PaperAirplaneIcon,
 } from "@heroicons/react/24/solid";
 import MessageContainer from "./MessageContainer";
-const ChatBox = () => {
+import { useAuth } from "../hooks/useAuth";
+const ChatBox = ({ messages }) => {
+  const user = useAuth((state) => state.user);
+
   return (
     <div>
       <div>
@@ -37,12 +40,17 @@ const ChatBox = () => {
             </div>
           </div>
         </div> */}
-        <MessageContainer
-          username={"lyes"}
-          message={"hi!"}
-          side={1}
-          date={"10:31"}
-        />
+        {messages.length > 0 &&
+          messages.map((msg) => (
+            <MessageContainer
+              key={msg.id}
+              username={msg.userInfo.Nom + " " + msg.userInfo.Prenom}
+              message={msg.Content}
+              side={user.id === msg.sender ? 1 : 0}
+              date={msg.heure}
+            />
+          ))}
+        {/*       
         <MessageContainer
           username={"kam"}
           message={"hello!"}
@@ -78,7 +86,7 @@ const ChatBox = () => {
           message={"NO!"}
           side={0}
           date={"10:35"}
-        />
+        /> */}
         {/* <div className="mx-2 flex justify-start">
           <div className="flex w-11/12">
             <UserCircleIcon className="inline-block h-10 w-10 rounded-full" />

@@ -29,6 +29,7 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`)); */
 const express = require("express");
 const { createClient } = require("@supabase/supabase-js");
 const userRoutes = require("./routes/userRoutes");
+const chatRoutes = require("./routes/ChatRoutes");
 const InvitationRoutes = require("./routes/InvitationRoutes");
 const MessageRoutes = require("./routes/MessageRoutes");
 const FriendRoutes = require("./routes/FriendRoutes");
@@ -45,39 +46,22 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/user", userRoutes);
+app.use("/chat", chatRoutes);
 app.use("/Invitation", InvitationRoutes);
 app.use("/Friends", FriendRoutes);
 app.use("/Message", MessageRoutes);
 
 //sockets
 const http = require("http");
-const socketIo = require("socket.io");
 
 //initialiser un server sockets
 const server = http.createServer(app);
 //pour ecouter les cnx entrantes du client
-const io = socketIo(server);
-
-// Gestion des connexions socket
-io.on("connection", (socket) => {
-  console.log("New client connected");
-
-  // Gestion des événements
-  socket.on("message", (data) => {
-    console.log("Message received:", data);
-    // Diffuser le message à tous les clients connectés
-    io.emit("message", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
-  });
-});
 
 server.listen(3000, () => {
   console.log("Socket server listening on port 3000");
 });
 
-module.exports = { app, server, io };
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// const io = require('socket.io')(server);
