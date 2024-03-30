@@ -57,11 +57,34 @@ const http = require("http");
 //initialiser un server sockets
 const server = http.createServer(app);
 //pour ecouter les cnx entrantes du client
-
-server.listen(3000, () => {
-  console.log("Socket server listening on port 3000");
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "http://localhost:3000", // Autoriser les connexions depuis ce domaine
+    methods: ["GET", "POST"], // Autoriser les méthodes HTTP GET et POST
+  },
 });
 
+io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  // Envoyer un message de bienvenue au nouveau client
+  socket.emit("id", socket.id);
+
+  // Gestion de la réception des messages
+  socket.on("send message", (data) => {
+    // Ajoutez async ici
+    console.log("Message received from client:", data);
+    io.emit(`message-${data.chat}`, data);
+    /* if (data.chatId === '42')
+      
+    /*}*/
+  });
+  // Gestion de la déconnexion des clients
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+});
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 // const io = require('socket.io')(server);
+module.exports = { app, server, io };

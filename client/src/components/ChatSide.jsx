@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   SparklesIcon,
   HashtagIcon,
@@ -14,6 +14,8 @@ import {
 import ChatBox from "./ChatBox";
 import { useAuth } from "../hooks/useAuth";
 import axios from "axios";
+import io from "socket.io-client";
+
 const ChatSide = ({ name, type, selected }) => {
   const [infoShow, setInfoShow] = useState(false);
   const showInfo = () => {
@@ -22,17 +24,43 @@ const ChatSide = ({ name, type, selected }) => {
   const [messages, setMessages] = useState([]);
   const user = useAuth((state) => state.user);
   const [content, setContent] = useState("");
+  const [socketId, setSocketId] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const socketRef = useRef();
+  useEffect(() => {
+    socketRef.current = io.connect("http://localhost:5000");
+
+    socketRef.current.on("id", (id) => {
+      console.log(id);
+      setSocketId(id);
+    });
+
+    socketRef.current.on(`message-${selected}`, (msg) => {
+      console.log("Message received from server:", messages, msg);
+      if (!messages.some((m) => m.id === msg.id)) {
+        setMessages((oldmsgs) => [...oldmsgs, msg]);
+        console.log([...messages, msg]);
+      }
+    });
+
+    return () => {
+      console.log("disconnecting");
+      socketRef.current.disconnect();
+    };
+  }, [selected]);
 
   useEffect(() => {
     //fetch messages
 
     const fetchMessages = async () => {
+      setChatLoading(true);
       //fetch chat table with type chat
       const response = await axios.post("http://localhost:5000/Message/get", {
         chatId: selected,
       });
       console.log(response.data);
       setMessages(response.data);
+      setChatLoading(false);
     };
     fetchMessages();
   }, [selected]);
@@ -47,14 +75,32 @@ const ChatSide = ({ name, type, selected }) => {
       }); // hh:mm
 
       console.log(dateFormatted, timeFormatted, selected, content, user.id);
-      const response = await axios.post("http://localhost:5000/Message/Add", {
+      const payload = {
         chatId: selected,
         content: content,
         sender: user.id,
         date: dateFormatted,
         heure: timeFormatted,
-      });
-      console.log(response.data);
+      };
+
+      new Promise(async (resolve, reject) => {
+        try {
+          const response = await axios.post(
+            "http://localhost:5000/Message/Add",
+            payload
+          );
+          resolve(response.data);
+        } catch (error) {
+          reject(error);
+        }
+      })
+        .then((responseData) => {
+          socketRef.current.emit("send message", responseData);
+          console.log(responseData);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
     }
   };
   return (
@@ -79,7 +125,7 @@ const ChatSide = ({ name, type, selected }) => {
           </button>
         </div>
         <div className="h-[75%] overflow-y-auto bg-[#36393e]">
-          <ChatBox messages={messages} />
+          <ChatBox isloading={chatLoading} messages={messages} />
         </div>
         <div className="buttons flex flex-row items-center justify-center gap-5      px-5 py-2 h-1/6 bg-[#282b30]">
           <div className="flex flex-row p-1 rounded-full  gap-1  ring-2 ring-[#ffff] focus:ring-blue-500 w-[85%] items-center">

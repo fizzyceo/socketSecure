@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/solid";
 import MessageContainer from "./MessageContainer";
 import { useAuth } from "../hooks/useAuth";
-const ChatBox = ({ messages }) => {
+const ChatBox = ({ isloading, messages }) => {
   const user = useAuth((state) => state.user);
 
   return (
@@ -21,8 +21,13 @@ const ChatBox = ({ messages }) => {
       <div>
         <h1 className="text-2xl text-center"># Welcome to the chat</h1>
       </div>
-      <div className="flex flex-col gap-6 text-lg">
-        {/* <div className="mx-2 flex justify-end">
+      {isloading ? (
+        <div className="flex items-center justify-center h-full loader">
+          Loading...
+        </div>
+      ) : (
+        <div className="flex flex-col gap-6 text-lg">
+          {/* <div className="mx-2 flex justify-end">
           <div className="flex w-11/12 flex-row-reverse">
             <UserCircleIcon className="inline-block h-10 w-10 rounded-full" />
             <div className="mr-4" />
@@ -40,72 +45,18 @@ const ChatBox = ({ messages }) => {
             </div>
           </div>
         </div> */}
-        {messages.length > 0 &&
-          messages.map((msg) => (
-            <MessageContainer
-              key={msg.id}
-              username={msg.userInfo.Nom + " " + msg.userInfo.Prenom}
-              message={msg.Content}
-              side={user.id === msg.sender ? 1 : 0}
-              date={msg.heure}
-            />
-          ))}
-        {/*       
-        <MessageContainer
-          username={"kam"}
-          message={"hello!"}
-          side={0}
-          date={"10:33"}
-        />
-        <MessageContainer
-          username={"lyes"}
-          message={"SUB!"}
-          side={1}
-          date={"10:33"}
-        />
-        <MessageContainer
-          username={"kam"}
-          message={"NO!"}
-          side={0}
-          date={"10:35"}
-        />
-        <MessageContainer
-          username={"lyes"}
-          message={"SUB!"}
-          side={1}
-          date={"10:33"}
-        />
-        <MessageContainer
-          username={"kam"}
-          message={"NO!"}
-          side={0}
-          date={"10:35"}
-        />
-        <MessageContainer
-          username={"kam"}
-          message={"NO!"}
-          side={0}
-          date={"10:35"}
-        /> */}
-        {/* <div className="mx-2 flex justify-start">
-          <div className="flex w-11/12">
-            <UserCircleIcon className="inline-block h-10 w-10 rounded-full" />
-            <div className="mr-4" />
-            <div>
-              <h1 className="text-left  text-sm">@username</h1>
-              <div className="relative max-w-xl rounded-xl bg-[#1e2124] rounded-tl-none bg-muted-1 px-4 py-2">
-                <span className="text-sm font-medium text-heading">
-                  Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                </span>
-                <span className="absolute top-0 right-0 flex h-8 w-8 -translate-y-3 translate-x-5 transform items-center justify-center rounded-full bg-[#1e2124] p-2 text-xs">
-                  🎉
-                </span>
-              </div>
-              <h1 className="text-left  text-sm">15:54</h1>
-            </div>
-          </div>
-        </div> */}
-      </div>
+          {messages.length > 0 &&
+            messages.map((msg) => (
+              <MessageContainer
+                key={msg.id}
+                username={msg.userInfo.Nom + " " + msg.userInfo.Prenom}
+                message={msg.Content}
+                side={user.id === msg.sender ? 1 : 0}
+                date={msg.heure}
+              />
+            ))}
+        </div>
+      )}
     </div>
   );
 };

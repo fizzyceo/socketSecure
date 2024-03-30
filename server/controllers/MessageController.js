@@ -69,7 +69,7 @@ async function Addmessage(req, res) {
 
     const userRes = await supabase
       .from("User")
-      .select("Nom", "Prenom")
+      .select("*")
       .eq("user_id", sender)
       .single();
     if (error) {
@@ -79,11 +79,12 @@ async function Addmessage(req, res) {
     // Diffuser le message à tous les clients connectés
     // io.emit("message", { content, date, heure, sender });
     // Retourner uniquement les données de session dans la réponse JSON
-    return res.status(201).json({
-      message: "Message added successfully",
-      data,
+    const response = {
+      ...data[0],
       userInfo: userRes.data,
-    });
+    };
+    console.log(response);
+    return res.status(201).json(response);
   } catch (error) {
     console.error("Error signing in user:", error.message);
     return res.status(500).json({ message: "Internal server error" });
