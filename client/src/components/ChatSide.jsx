@@ -38,7 +38,13 @@ const ChatSide = ({ name, type, selected }) => {
     socketRef.current.on(`message-${selected}`, (msg) => {
       console.log("Message received from server:", messages, msg);
       if (!messages.some((m) => m.id === msg.id)) {
-        setMessages((oldmsgs) => [...oldmsgs, msg]);
+        setMessages((oldmsgs) => {
+          // Check if oldmsgs is an array, if not, initialize it as an empty array
+          if (!Array.isArray(oldmsgs)) {
+            oldmsgs = [];
+          }
+          return [...oldmsgs, msg];
+        });
         console.log([...messages, msg]);
       }
     });
@@ -53,15 +59,23 @@ const ChatSide = ({ name, type, selected }) => {
     //fetch messages
 
     const fetchMessages = async () => {
-      setChatLoading(true);
       //fetch chat table with type chat
-      const response = await axios.post("http://localhost:5000/Message/get", {
-        chatId: selected,
-      });
-      console.log(response.data);
-      setMessages(response.data);
-      setChatLoading(false);
+      try {
+        setChatLoading(true);
+
+        const response = await axios.post("http://localhost:5000/Message/get", {
+          chatId: selected,
+        });
+        console.log(response.data);
+        setMessages(response.data);
+      } catch (err) {
+        setChatLoading(false);
+        throw err;
+      } finally {
+        setChatLoading(false);
+      }
     };
+
     fetchMessages();
   }, [selected]);
 

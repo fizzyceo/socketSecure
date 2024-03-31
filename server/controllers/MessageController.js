@@ -98,6 +98,7 @@ async function getMessage(req, res) {
       .from("Message")
       .select("*")
       .eq("chat", chatId);
+    console.log(data);
     if (data.length > 0) {
       for (let i = 0; i < data?.length; i++) {
         const userData = await supabase
@@ -108,6 +109,8 @@ async function getMessage(req, res) {
       }
       if (error) throw error;
       res.json(data);
+    } else {
+      res.json({ data: [] });
     }
   } catch (error) {
     console.error("Error fetching users:", error);

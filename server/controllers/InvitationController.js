@@ -177,13 +177,20 @@ async function sendGroupInvitation(req, res) {
   const { Title, From, members } = req.body;
 
   try {
+    const user = await supabase
+      .from("User")
+      .select("id")
+      .eq("user_id", From)
+      .single();
+
     let groupId = req.body?.idGroup;
 
     if (!groupId) {
       const newGrp = await createChat(Title, From, "channel");
       groupId = newGrp.chatId;
     }
-    await supabase.from("Member").insert({ id: From, chatId: groupId });
+    console.log(groupId);
+    await supabase.from("Member").insert({ id: user.data.id, chatId: groupId });
 
     for (const member of members) {
       const memberInfo = await supabase
@@ -191,9 +198,22 @@ async function sendGroupInvitation(req, res) {
         .select("id")
         .eq("Email", member)
         .single();
-      await supabase
+      console.log(
+        "groupId:",
+        groupId,
+        " From:",
+        From,
+        " To: ",
+        memberInfo.data.id
+      );
+      const inv = await supabase
         .from("Invitation")
-        .insert({ idchat: groupId, From: From, To: memberInfo.data.id });
+        .insert({
+          idchat: groupId,
+          From: user.data.id,
+          To: memberInfo.data.id,
+        });
+      console.log(inv);
     }
 
     return res
